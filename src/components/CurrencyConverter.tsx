@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import Select from 'react-select';
+import type { SingleValue } from 'react-select'; 
+interface OptionType {
+  value: string;
+  label: string;
+}
 
 interface ExchangeRatesResponse {
   rates: Record<string, number>;
@@ -24,6 +30,13 @@ const CurrencyConverter: React.FC = () => {
       .catch((err) => console.error("Error fetching currencies:", err));
   }, []);
 
+  const currencyOptions: OptionType[] = useMemo(() => {
+    return currencies.map((cur) => ({
+      value: cur,
+      label: cur,
+    }));
+  }, [currencies]);
+
   const handleConvert = async () => {
     if (!amount || amount <= 0) {
       alert("Please enter a valid amount");
@@ -38,8 +51,25 @@ const CurrencyConverter: React.FC = () => {
       setResult(conversion);
     } catch (error) {
       console.error("Conversion error:", error);
+      alert("Conversion error. Please try again.");
     }
   };
+  
+  const handleFromCurrencyChange = (selectedOption: SingleValue<OptionType>) => {
+    if (selectedOption) {
+      setFromCurrency(selectedOption.value);
+    }
+  };
+
+  const handleToCurrencyChange = (selectedOption: SingleValue<OptionType>) => {
+    if (selectedOption) {
+      setToCurrency(selectedOption.value);
+    }
+  };
+  
+  const fromValue = currencyOptions.find(option => option.value === fromCurrency);
+  const toValue = currencyOptions.find(option => option.value === toCurrency);
+
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-md w-80">
@@ -53,30 +83,39 @@ const CurrencyConverter: React.FC = () => {
         />
 
         <label className="text-sm font-medium">From:</label>
-        <select
-          value={fromCurrency}
-          onChange={(e) => setFromCurrency(e.target.value)}
-          className="border rounded p-2"
-        >
-          {currencies.map((cur) => (
-            <option key={cur} value={cur}>
-              {cur}
-            </option>
-          ))}
-        </select>
+        <Select
+          value={fromValue} 
+          onChange={handleFromCurrencyChange}
+          options={currencyOptions}
+          className="basic-single"
+          classNamePrefix="select"
+          
+          styles={{
+            control: (base) => ({
+              ...base,
+              borderRadius: '0.25rem', 
+              padding: '0px', 
+              minHeight: '2.5rem',
+            }),
+          }}
+        />
 
         <label className="text-sm font-medium">To:</label>
-        <select
-          value={toCurrency}
-          onChange={(e) => setToCurrency(e.target.value)}
-          className="border rounded p-2"
-        >
-          {currencies.map((cur) => (
-            <option key={cur} value={cur}>
-              {cur}
-            </option>
-          ))}
-        </select>
+        <Select
+          value={toValue} 
+          onChange={handleToCurrencyChange}
+          options={currencyOptions}
+          className="basic-single"
+          classNamePrefix="select"
+          styles={{
+            control: (base) => ({
+              ...base,
+              borderRadius: '0.25rem', 
+              padding: '0px', 
+              minHeight: '2.5rem',
+            }),
+          }}
+        />
 
         <button
           onClick={handleConvert}
